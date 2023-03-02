@@ -49,8 +49,9 @@ class FusedLocationClient implements LocationClient {
 
   @Nullable private ErrorCallback errorCallback;
   @Nullable private PositionChangedCallback positionChangedCallback;
+    @Nullable private LogListener logListener;
 
-  public FusedLocationClient(@NonNull Context context, @Nullable LocationOptions locationOptions) {
+    public FusedLocationClient(@NonNull Context context, @Nullable LocationOptions locationOptions) {
     this.context = context;
     this.fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
     this.locationOptions = locationOptions;
@@ -61,10 +62,10 @@ class FusedLocationClient implements LocationClient {
         new LocationCallback() {
           @Override
           public synchronized void onLocationResult(@NonNull LocationResult locationResult) {
+              log("onLocationResult");
             if (positionChangedCallback == null) {
-              Log.e(
-                  TAG,
-                  "LocationCallback was called with empty locationResult or no positionChangedCallback was registered.");
+                log("LocationCallback was called with empty locationResult or no positionChangedCallback was registered.");
+
               fusedLocationProviderClient.removeLocationUpdates(locationCallback);
               if (errorCallback != null) {
                 errorCallback.onError(ErrorCodes.errorWhileAcquiringPosition);
@@ -75,6 +76,7 @@ class FusedLocationClient implements LocationClient {
             Location location = locationResult.getLastLocation();
             nmeaClient.enrichExtrasWithNmea(location);
             positionChangedCallback.onPositionChanged(location);
+              log("postion successful delivered");
           }
 
           @Override
@@ -204,6 +206,7 @@ class FusedLocationClient implements LocationClient {
       @Nullable Activity activity,
       @NonNull PositionChangedCallback positionChangedCallback,
       @NonNull ErrorCallback errorCallback) {
+      this.logListener = logListener;
 
       checker = Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
               new Handler(Looper.getMainLooper()).post(() -> {
@@ -275,7 +278,16 @@ class FusedLocationClient implements LocationClient {
   }
 
   public void stopPositionUpdates() {
+      if(checker != null) {
+          checker.cancel(true);
+      }
     this.nmeaClient.stop();
     fusedLocationProviderClient.removeLocationUpdates(locationCallback);
   }
+
+    private void log(String message) {
+        Log.e(TAG, message);
+        if (logListener == null) return;
+        this.logListener.onLog(TAG, message);
+    }
 }
