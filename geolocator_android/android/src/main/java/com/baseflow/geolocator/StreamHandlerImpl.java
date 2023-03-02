@@ -16,15 +16,34 @@ import com.baseflow.geolocator.location.LocationMapper;
 import com.baseflow.geolocator.location.LocationOptions;
 import com.baseflow.geolocator.permission.PermissionManager;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.EventChannel;
+import io.flutter.plugin.common.MethodChannel;
+
+class LogListener {
+    private final MethodChannel channel;
+
+    public LogListener(BinaryMessenger messenger) {
+        channel = new MethodChannel(messenger, "flutter.baseflow.com/geolocator_android");
+    }
+
+    void onLog(String tag, String message) {
+        HashMap<String,String> payload = new HashMap<>();
+        payload.put("tag", tag);
+        payload.put("message", message);
+
+        channel.invokeMethod("onLog", payload);
+    }
+}
 
 class StreamHandlerImpl implements EventChannel.StreamHandler {
   private static final String TAG = "FlutterGeolocator";
 
   private final PermissionManager permissionManager;
+  private final LogListener logListener;
 
   @Nullable private EventChannel channel;
   @Nullable private Context context;
@@ -33,13 +52,16 @@ class StreamHandlerImpl implements EventChannel.StreamHandler {
   @Nullable private GeolocationManager geolocationManager;
   @Nullable private LocationClient locationClient;
 
-  public StreamHandlerImpl(PermissionManager permissionManager) {
+  public StreamHandlerImpl(PermissionManager permissionManager, LogListener logListener) {
     this.permissionManager = permissionManager;
+    this.logListener = logListener;
+
     geolocationManager = new GeolocationManager();
   }
 
   public void setForegroundLocationService(
       @Nullable GeolocatorLocationService foregroundLocationService) {
+      log("Setting foreground service to " + foregroundLocationService);
     this.foregroundLocationService = foregroundLocationService;
   }
 
@@ -77,7 +99,7 @@ class StreamHandlerImpl implements EventChannel.StreamHandler {
    */
   void stopListening() {
     if (channel == null) {
-      Log.d(TAG, "Tried to stop listening when no MethodChannel had been initialized.");
+      log("Tried to stop listening when no MethodChannel had been initialized.");
       return;
     }
 
@@ -106,7 +128,7 @@ class StreamHandlerImpl implements EventChannel.StreamHandler {
     }
 
     if (foregroundLocationService == null) {
-      Log.e(TAG, "Location background service has not started correctly");
+      log("Location background service has not started correctly");
       return;
     }
 
@@ -125,11 +147,11 @@ class StreamHandlerImpl implements EventChannel.StreamHandler {
               (Map<String, Object>) map.get("foregroundNotificationConfig"));
     }
     if (foregroundNotificationOptions != null) {
-      Log.e(TAG, "Geolocator position updates started using Android foreground service");
-      foregroundLocationService.startLocationService(forceLocationManager, locationOptions, events);
+      log("Geolocator position updates started using Android foreground service");
+      foregroundLocationService.startLocationService(forceLocationManager, locationOptions, events, logListener);
       foregroundLocationService.enableBackgroundMode(foregroundNotificationOptions);
     } else {
-      Log.e(TAG, "Geolocator position updates started");
+      log("Geolocator position updates started");
       locationClient =
           geolocationManager.createLocationClient(
               context, Boolean.TRUE.equals(forceLocationManager), locationOptions);
@@ -149,16 +171,21 @@ class StreamHandlerImpl implements EventChannel.StreamHandler {
   }
 
   private void disposeListeners(boolean cancelled) {
-    Log.e(TAG, "Geolocator position updates stopped");
+    log("Geolocator position updates stopped");
     if (foregroundLocationService != null && foregroundLocationService.canStopLocationService(cancelled)) {
       foregroundLocationService.stopLocationService();
       foregroundLocationService.disableBackgroundMode();
     } else {
-      Log.e(TAG, "There is still another flutter engine connected, not stopping location service");
+      log("There is still another flutter engine connected, not stopping location service");
     }
     if (locationClient != null && geolocationManager != null) {
       geolocationManager.stopPositionUpdates(locationClient);
       locationClient = null;
     }
+  }
+
+  private void log(String message) {
+      Log.d(TAG, message);
+      this.logListener.onLog(TAG, message);
   }
 }

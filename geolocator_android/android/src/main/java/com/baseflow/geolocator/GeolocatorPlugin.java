@@ -30,6 +30,8 @@ public class GeolocatorPlugin implements FlutterPlugin, ActivityAware {
 
   @Nullable private MethodCallHandlerImpl methodCallHandler;
 
+  @Nullable private LogListener logListener;
+
   @Nullable private StreamHandlerImpl streamHandler;
   private final ServiceConnection serviceConnection =
       new ServiceConnection() {
@@ -88,7 +90,10 @@ public class GeolocatorPlugin implements FlutterPlugin, ActivityAware {
     methodCallHandler.startListening(registrar.context(), registrar.messenger());
     methodCallHandler.setActivity(registrar.activity());
 
-    StreamHandlerImpl streamHandler = new StreamHandlerImpl(geolocatorPlugin.permissionManager);
+    StreamHandlerImpl streamHandler = new StreamHandlerImpl(
+            geolocatorPlugin.permissionManager,
+            new LogListener(registrar.messenger())
+    );
     streamHandler.startListening(registrar.context(), registrar.messenger());
 
     LocationServiceHandlerImpl locationServiceHandler = new LocationServiceHandlerImpl();
@@ -99,12 +104,14 @@ public class GeolocatorPlugin implements FlutterPlugin, ActivityAware {
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
+      logListener = new LogListener(flutterPluginBinding.getBinaryMessenger());
+
     methodCallHandler =
         new MethodCallHandlerImpl(
             this.permissionManager, this.geolocationManager, this.locationAccuracyManager);
     methodCallHandler.startListening(
         flutterPluginBinding.getApplicationContext(), flutterPluginBinding.getBinaryMessenger());
-    streamHandler = new StreamHandlerImpl(this.permissionManager);
+    streamHandler = new StreamHandlerImpl(this.permissionManager, this.logListener);
     streamHandler.startListening(
         flutterPluginBinding.getApplicationContext(), flutterPluginBinding.getBinaryMessenger());
 

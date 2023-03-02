@@ -55,10 +55,13 @@ public class GeolocatorLocationService extends Service {
     @Nullable
     private ForegroundNotificationOptions foregroundNotificationOptions;
 
+    @Nullable
+    private LogListener logListener;
+
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "Creating service.");
+        log("Creating service.");
         geolocationManager = new GeolocationManager();
     }
 
@@ -70,26 +73,26 @@ public class GeolocatorLocationService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d(TAG, "Binding to location service.");
+        log("Binding to location service.");
         return binder;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
-        Log.d(TAG, "Unbinding from location service.");
+        log("Unbinding from location service.");
         return super.onUnbind(intent);
     }
 
     @Override
     public void onDestroy() {
-        Log.d(TAG, "Destroying location service.");
+        log("Destroying location service.");
 
         stopLocationService();
         disableBackgroundMode();
         geolocationManager = null;
         backgroundNotification = null;
 
-        Log.d(TAG, "Destroyed location service.");
+        log("Destroyed location service.");
         super.onDestroy();
     }
 
@@ -103,20 +106,22 @@ public class GeolocatorLocationService extends Service {
     public void flutterEngineConnected() {
 
         connectedEngines++;
-        Log.d(TAG, "Flutter engine connected. Connected engine count " + connectedEngines);
+        log("Flutter engine connected. Connected engine count " + connectedEngines);
     }
 
     public void flutterEngineDisconnected() {
 
         connectedEngines--;
-        Log.d(TAG, "Flutter engine disconnected. Connected engine count " + connectedEngines);
+        log("Flutter engine disconnected. Connected engine count " + connectedEngines);
     }
 
     public void startLocationService(
             boolean forceLocationManager,
             LocationOptions locationOptions,
-            EventChannel.EventSink events) {
+            EventChannel.EventSink events,
+            LogListener logListener) {
 
+        this.logListener = logListener;
         listenerCount++;
         if (geolocationManager != null) {
             locationClient =
@@ -136,7 +141,7 @@ public class GeolocatorLocationService extends Service {
 
     public void stopLocationService() {
         listenerCount--;
-        Log.d(TAG, "Stopping location service.");
+        log("Stopping location service.");
         if (locationClient != null && geolocationManager != null) {
             geolocationManager.stopPositionUpdates(locationClient);
         }
@@ -146,10 +151,10 @@ public class GeolocatorLocationService extends Service {
         foregroundNotificationOptions = options;
 
         if (backgroundNotification != null) {
-            Log.d(TAG, "Service already in foreground mode.");
+            log("Service already in foreground mode.");
             changeNotificationOptions(options);
         } else {
-            Log.d(TAG, "Start service in foreground mode.");
+            log("Start service in foreground mode.");
 
             int notificationId = getNotificationId();
 
@@ -167,7 +172,7 @@ public class GeolocatorLocationService extends Service {
     @SuppressWarnings("deprecation")
     public void disableBackgroundMode() {
         if (isForeground) {
-            Log.d(TAG, "Stop service in foreground.");
+            log("Stop service in foreground.");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 stopForeground(getNotificationId());
             } else {
@@ -241,5 +246,12 @@ public class GeolocatorLocationService extends Service {
         public GeolocatorLocationService getLocationService() {
             return locationService;
         }
+    }
+
+    private void log(String message) {
+        Log.d(TAG, message);
+        if(logListener == null) return;
+
+        logListener.onLog(TAG, message);
     }
 }
