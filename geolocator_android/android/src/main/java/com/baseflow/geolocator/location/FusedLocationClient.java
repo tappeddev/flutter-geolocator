@@ -5,12 +5,14 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.IntentSender;
 import android.location.Location;
+import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.baseflow.geolocator.LogListener;
 import com.baseflow.geolocator.errors.ErrorCallback;
 import com.baseflow.geolocator.errors.ErrorCodes;
 import com.google.android.gms.common.api.ApiException;
@@ -29,6 +31,9 @@ import com.google.android.gms.location.Priority;
 import com.google.android.gms.location.SettingsClient;
 
 import java.security.SecureRandom;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 class FusedLocationClient implements LocationClient {
   private static final String TAG = "FlutterGeolocator";
@@ -38,6 +43,8 @@ class FusedLocationClient implements LocationClient {
   private final FusedLocationProviderClient fusedLocationProviderClient;
   private final NmeaClient nmeaClient;
   private final int activityRequestCode;
+
+  @Nullable private ScheduledFuture<?> checker;
   @Nullable private final LocationOptions locationOptions;
 
   @Nullable private ErrorCallback errorCallback;
@@ -193,9 +200,30 @@ class FusedLocationClient implements LocationClient {
 
   @SuppressLint("MissingPermission")
   public void startPositionUpdates(
+          LogListener logListener,
       @Nullable Activity activity,
       @NonNull PositionChangedCallback positionChangedCallback,
       @NonNull ErrorCallback errorCallback) {
+
+      checker = Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
+              new Handler(Looper.getMainLooper()).post(() -> {
+                  logListener.onLog("FusedLocationClient", "Exception: Checking data...");
+                  fusedLocationProviderClient.getLocationAvailability().addOnSuccessListener((r) -> {
+                      logListener.onLog("FusedLocationClient", "availbility: " + r);
+                  });
+                  fusedLocationProviderClient.getLastLocation().addOnSuccessListener((r) -> {
+                      String locationMessage = r.getLongitude() +
+                              " " +
+                              r.getLatitude() +
+                              " " +
+                              r.getAccuracy() +
+                              " " + r.getTime();
+
+
+                      logListener.onLog("FusedLocationClient", "lastLocation: " +locationMessage);
+                  });
+              });
+      },0,30, TimeUnit.SECONDS);
 
     this.positionChangedCallback = positionChangedCallback;
     this.errorCallback = errorCallback;
@@ -210,6 +238,7 @@ class FusedLocationClient implements LocationClient {
             locationSettingsResponse -> requestPositionUpdates(this.locationOptions))
         .addOnFailureListener(
             e -> {
+                logListener.onLog("FusedLocationClient", "Exception: " + e + " " + e.getMessage());
               if (e instanceof ResolvableApiException) {
                 // When we don't have an activity return an error code explaining the
                 // location services are not enabled

@@ -37,6 +37,8 @@ class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
   private final GeolocationManager geolocationManager;
   private final LocationAccuracyManager locationAccuracyManager;
 
+  private final LogListener logListener;
+
   @Nullable private Context context;
 
   @Nullable private Activity activity;
@@ -44,7 +46,9 @@ class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
   MethodCallHandlerImpl(
       PermissionManager permissionManager,
       GeolocationManager geolocationManager,
-      LocationAccuracyManager locationAccuracyManager) {
+      LocationAccuracyManager locationAccuracyManager,
+      LogListener logListener) {
+      this.logListener = logListener;
     this.permissionManager = permissionManager;
     this.geolocationManager = geolocationManager;
     this.locationAccuracyManager = locationAccuracyManager;
@@ -221,6 +225,7 @@ class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
 
     geolocationManager.startPositionUpdates(
         locationClient,
+        logListener,
         activity,
         (Location location) -> {
           if (replySubmitted[0]) {

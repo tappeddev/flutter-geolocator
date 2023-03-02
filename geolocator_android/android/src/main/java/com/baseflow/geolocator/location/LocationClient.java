@@ -4,6 +4,8 @@ import android.app.Activity;
 
 import android.content.Context;
 import android.location.LocationManager;
+
+import com.baseflow.geolocator.LogListener;
 import com.baseflow.geolocator.errors.ErrorCallback;
 
 public interface LocationClient {
@@ -15,6 +17,7 @@ public interface LocationClient {
   boolean onActivityResult(int requestCode, int resultCode);
 
   void startPositionUpdates(
+          LogListener logListener,
       Activity activity,
       PositionChangedCallback positionChangedCallback,
       ErrorCallback errorCallback);

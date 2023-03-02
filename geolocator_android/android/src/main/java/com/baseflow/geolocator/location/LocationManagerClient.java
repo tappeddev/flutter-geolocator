@@ -14,6 +14,7 @@ import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.baseflow.geolocator.LogListener;
 import com.baseflow.geolocator.errors.ErrorCallback;
 import com.baseflow.geolocator.errors.ErrorCodes;
 
@@ -164,6 +165,7 @@ class LocationManagerClient implements LocationClient, LocationListener {
   @SuppressLint("MissingPermission")
   @Override
   public void startPositionUpdates(
+          LogListener logListener,
       Activity activity,
       PositionChangedCallback positionChangedCallback,
       ErrorCallback errorCallback) {

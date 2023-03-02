@@ -23,22 +23,6 @@ import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodChannel;
 
-class LogListener {
-    private final MethodChannel channel;
-
-    public LogListener(BinaryMessenger messenger) {
-        channel = new MethodChannel(messenger, "flutter.baseflow.com/geolocator_android");
-    }
-
-    void onLog(String tag, String message) {
-        HashMap<String,String> payload = new HashMap<>();
-        payload.put("tag", tag);
-        payload.put("message", message);
-
-        channel.invokeMethod("onLog", payload);
-    }
-}
-
 class StreamHandlerImpl implements EventChannel.StreamHandler {
   private static final String TAG = "FlutterGeolocator";
 
@@ -158,6 +142,7 @@ class StreamHandlerImpl implements EventChannel.StreamHandler {
 
       geolocationManager.startPositionUpdates(
           locationClient,
+          logListener,
           activity,
           (Location location) -> events.success(LocationMapper.toHashMap(location)),
           (ErrorCodes errorCodes) ->

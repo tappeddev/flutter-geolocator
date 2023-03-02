@@ -132,6 +132,7 @@ public class GeolocatorLocationService extends Service {
 
             geolocationManager.startPositionUpdates(
                     locationClient,
+                    logListener,
                     activity,
                     (Location location) -> events.success(LocationMapper.toHashMap(location)),
                     (ErrorCodes errorCodes) ->

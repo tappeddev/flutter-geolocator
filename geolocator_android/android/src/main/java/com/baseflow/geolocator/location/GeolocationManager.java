@@ -7,6 +7,7 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.baseflow.geolocator.LogListener;
 import com.baseflow.geolocator.errors.ErrorCallback;
 import com.baseflow.geolocator.errors.ErrorCodes;
 import com.google.android.gms.common.ConnectionResult;
@@ -47,12 +48,13 @@ public class GeolocationManager
 
   public void startPositionUpdates(
       @NonNull LocationClient locationClient,
+      @NonNull LogListener logListener,
       @Nullable Activity activity,
       @NonNull PositionChangedCallback positionChangedCallback,
       @NonNull ErrorCallback errorCallback) {
 
     this.locationClients.add(locationClient);
-    locationClient.startPositionUpdates(activity, positionChangedCallback, errorCallback);
+    locationClient.startPositionUpdates(logListener,activity, positionChangedCallback, errorCallback);
   }
 
   public void stopPositionUpdates(@NonNull LocationClient locationClient) {
