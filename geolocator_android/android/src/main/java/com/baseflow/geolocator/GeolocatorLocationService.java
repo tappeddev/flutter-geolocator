@@ -155,7 +155,7 @@ public class GeolocatorLocationService extends Service {
             log("Service already in foreground mode.");
             changeNotificationOptions(options);
         } else {
-            log("Start service in foreground mode.");
+            log("Start service in foreground mode. Existing notificationId: " + options.getExistingNotificationId());
 
             int notificationId = getNotificationId();
 
