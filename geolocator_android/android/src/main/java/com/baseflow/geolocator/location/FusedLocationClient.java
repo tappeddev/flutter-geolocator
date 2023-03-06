@@ -49,9 +49,10 @@ class FusedLocationClient implements LocationClient {
 
   @Nullable private ErrorCallback errorCallback;
   @Nullable private PositionChangedCallback positionChangedCallback;
-    @Nullable private LogListener logListener;
+    private final LogListener logListener;
 
-    public FusedLocationClient(@NonNull Context context, @Nullable LocationOptions locationOptions) {
+    public FusedLocationClient(@NonNull Context context, @Nullable LocationOptions locationOptions, @NonNull LogListener logListener) {
+        this.logListener = logListener;
     this.context = context;
     this.fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
     this.locationOptions = locationOptions;
@@ -202,11 +203,9 @@ class FusedLocationClient implements LocationClient {
 
   @SuppressLint("MissingPermission")
   public void startPositionUpdates(
-          LogListener logListener,
       @Nullable Activity activity,
       @NonNull PositionChangedCallback positionChangedCallback,
       @NonNull ErrorCallback errorCallback) {
-      this.logListener = logListener;
 
       checker = Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
               new Handler(Looper.getMainLooper()).post(() -> {

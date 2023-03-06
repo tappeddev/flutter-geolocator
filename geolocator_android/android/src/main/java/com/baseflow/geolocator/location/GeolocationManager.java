@@ -52,13 +52,12 @@ public class GeolocationManager
 
   public void startPositionUpdates(
       @NonNull LocationClient locationClient,
-      @NonNull LogListener logListener,
       @Nullable Activity activity,
       @NonNull PositionChangedCallback positionChangedCallback,
       @NonNull ErrorCallback errorCallback) {
 
     this.locationClients.add(locationClient);
-    locationClient.startPositionUpdates(logListener,activity, positionChangedCallback, errorCallback);
+    locationClient.startPositionUpdates(activity, positionChangedCallback, errorCallback);
   }
 
   public void stopPositionUpdates(@NonNull LocationClient locationClient) {
@@ -76,12 +75,12 @@ public class GeolocationManager
       logListener.onLog(TAG, message);
 
     if (forceAndroidLocationManager) {
-      return new LocationManagerClient(context, locationOptions);
+      return new LocationManagerClient(context, locationOptions, logListener);
     }
 
       return googlePlayServicesAvailable
-        ? new FusedLocationClient(context, locationOptions)
-        : new LocationManagerClient(context, locationOptions);
+        ? new FusedLocationClient(context, locationOptions, logListener)
+        : new LocationManagerClient(context, locationOptions, logListener);
   }
 
   private boolean isGooglePlayServicesAvailable(Context context) {
@@ -94,6 +93,7 @@ public class GeolocationManager
     // are unavailable. This might happen when the GMS package has been excluded by
     // the app developer due to its proprietary license.
     catch(NoClassDefFoundError e) {
+        logListener.onLog(TAG, "isGooglePlayServicesAvailable failed because of :" + e.getMessage());
       return false;
     }
   }

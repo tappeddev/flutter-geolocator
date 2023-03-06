@@ -142,7 +142,6 @@ class StreamHandlerImpl implements EventChannel.StreamHandler {
 
       geolocationManager.startPositionUpdates(
           locationClient,
-          logListener,
           activity,
           (Location location) -> events.success(LocationMapper.toHashMap(location)),
           (ErrorCodes errorCodes) ->

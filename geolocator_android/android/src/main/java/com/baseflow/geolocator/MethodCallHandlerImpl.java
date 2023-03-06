@@ -225,7 +225,6 @@ class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
 
     geolocationManager.startPositionUpdates(
         locationClient,
-        logListener,
         activity,
         (Location location) -> {
           if (replySubmitted[0]) {

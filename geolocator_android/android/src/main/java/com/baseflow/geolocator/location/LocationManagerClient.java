@@ -23,6 +23,8 @@ import java.util.List;
 class LocationManagerClient implements LocationClient, LocationListener {
 
   private static final long TWO_MINUTES = 120000;
+
+  private static final String TAG = "LocationManagerClient";
   private final LocationManager locationManager;
   private final NmeaClient nmeaClient;
   @Nullable private final LocationOptions locationOptions;
@@ -34,8 +36,11 @@ class LocationManagerClient implements LocationClient, LocationListener {
   @Nullable private PositionChangedCallback positionChangedCallback;
   @Nullable private ErrorCallback errorCallback;
 
+  private LogListener logListener;
+
   public LocationManagerClient(
-      @NonNull Context context, @Nullable LocationOptions locationOptions) {
+      @NonNull Context context, @Nullable LocationOptions locationOptions, @NonNull LogListener logListener) {
+      this.logListener = logListener;
     this.locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
     this.locationOptions = locationOptions;
     this.context = context;
@@ -165,7 +170,6 @@ class LocationManagerClient implements LocationClient, LocationListener {
   @SuppressLint("MissingPermission")
   @Override
   public void startPositionUpdates(
-          LogListener logListener,
       Activity activity,
       PositionChangedCallback positionChangedCallback,
       ErrorCallback errorCallback) {
@@ -197,6 +201,7 @@ class LocationManagerClient implements LocationClient, LocationListener {
 
     this.isListening = true;
     this.nmeaClient.start();
+    logListener.onLog(TAG, "Start position updates with provider: " + this.currentLocationProvider);
     this.locationManager.requestLocationUpdates(
         this.currentLocationProvider, timeInterval, distanceFilter, this, Looper.getMainLooper());
   }
@@ -211,6 +216,7 @@ class LocationManagerClient implements LocationClient, LocationListener {
 
   @Override
   public synchronized void onLocationChanged(Location location) {
+      logListener.onLog(TAG, "onLocationChanged");
     float desiredAccuracy =
         locationOptions != null ? accuracyToFloat(locationOptions.getAccuracy()) : 50;
 
@@ -221,6 +227,7 @@ class LocationManagerClient implements LocationClient, LocationListener {
       if (this.positionChangedCallback != null) {
         nmeaClient.enrichExtrasWithNmea(location);
         this.positionChangedCallback.onPositionChanged(currentBestLocation);
+          logListener.onLog(TAG, "position delivered.");
       }
     }
   }
@@ -242,8 +249,10 @@ class LocationManagerClient implements LocationClient, LocationListener {
   @SuppressLint("MissingPermission")
   @Override
   public void onProviderDisabled(String provider) {
+      logListener.onLog(TAG, "onProviderDisabled: " + provider);
     if (provider.equals(this.currentLocationProvider)) {
       if (isListening) {
+          logListener.onLog(TAG, "onProviderDisabled and removing updates: " + provider);
         this.locationManager.removeUpdates(this);
       }
 

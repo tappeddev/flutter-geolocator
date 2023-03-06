@@ -17,7 +17,6 @@ public interface LocationClient {
   boolean onActivityResult(int requestCode, int resultCode);
 
   void startPositionUpdates(
-          LogListener logListener,
       Activity activity,
       PositionChangedCallback positionChangedCallback,
       ErrorCallback errorCallback);
