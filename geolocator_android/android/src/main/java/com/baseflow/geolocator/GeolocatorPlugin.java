@@ -63,7 +63,7 @@ public class GeolocatorPlugin implements FlutterPlugin, ActivityAware {
 
   public GeolocatorPlugin() {
     permissionManager = new PermissionManager();
-    geolocationManager = new GeolocationManager();
+    geolocationManager = new GeolocationManager(logListener);
     locationAccuracyManager = new LocationAccuracyManager();
   }
 

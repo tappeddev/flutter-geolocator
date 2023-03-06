@@ -20,9 +20,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class GeolocationManager
     implements io.flutter.plugin.common.PluginRegistry.ActivityResultListener {
 
+    static private final String TAG = "GeolocationManager";
+
+    private final LogListener logListener;
   private final List<LocationClient> locationClients;
 
-  public GeolocationManager() {
+  public GeolocationManager(LogListener logListener) {
+      this.logListener = logListener;
     this.locationClients = new CopyOnWriteArrayList<>();
   }
 
@@ -66,11 +70,16 @@ public class GeolocationManager
       Context context,
       boolean forceAndroidLocationManager,
       @Nullable LocationOptions locationOptions) {
+      boolean googlePlayServicesAvailable = isGooglePlayServicesAvailable(context);
+
+      String message = "createLocationClient: forced: " + forceAndroidLocationManager + " googlePlayServicesAvailable: " + googlePlayServicesAvailable;
+      logListener.onLog(TAG, message);
+
     if (forceAndroidLocationManager) {
       return new LocationManagerClient(context, locationOptions);
     }
 
-    return isGooglePlayServicesAvailable(context)
+      return googlePlayServicesAvailable
         ? new FusedLocationClient(context, locationOptions)
         : new LocationManagerClient(context, locationOptions);
   }

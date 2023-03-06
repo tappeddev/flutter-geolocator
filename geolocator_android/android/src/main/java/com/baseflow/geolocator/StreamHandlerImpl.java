@@ -40,7 +40,7 @@ class StreamHandlerImpl implements EventChannel.StreamHandler {
     this.permissionManager = permissionManager;
     this.logListener = logListener;
 
-    geolocationManager = new GeolocationManager();
+    geolocationManager = new GeolocationManager(logListener);
   }
 
   public void setForegroundLocationService(
@@ -135,7 +135,7 @@ class StreamHandlerImpl implements EventChannel.StreamHandler {
       foregroundLocationService.startLocationService(forceLocationManager, locationOptions, events, logListener);
       foregroundLocationService.enableBackgroundMode(foregroundNotificationOptions);
     } else {
-      log("Geolocator position updates started");
+      log("Geolocator position updates started. ");
       locationClient =
           geolocationManager.createLocationClient(
               context, Boolean.TRUE.equals(forceLocationManager), locationOptions);

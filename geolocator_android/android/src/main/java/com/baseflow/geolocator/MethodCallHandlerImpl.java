@@ -233,6 +233,7 @@ class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
           }
 
           replySubmitted[0] = true;
+          logListener.onLog(TAG, "Stopping position updates from method call.");
           geolocationManager.stopPositionUpdates(locationClient);
           result.success(LocationMapper.toHashMap(location));
         },
@@ -242,6 +243,7 @@ class MethodCallHandlerImpl implements MethodChannel.MethodCallHandler {
           }
 
           replySubmitted[0] = true;
+          logListener.onLog(TAG, "Stopping position updates with errorCode: " + errorCode);
           geolocationManager.stopPositionUpdates(locationClient);
           result.error(errorCode.toString(), errorCode.toDescription(), null);
         });
