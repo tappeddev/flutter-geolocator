@@ -229,6 +229,8 @@ class LocationManagerClient implements LocationClient, LocationListener {
         this.positionChangedCallback.onPositionChanged(currentBestLocation);
           logListener.onLog(TAG, "position delivered.");
       }
+    } else {
+        logListener.onLog(TAG, "position not better or not accurate enough.");
     }
   }
 
