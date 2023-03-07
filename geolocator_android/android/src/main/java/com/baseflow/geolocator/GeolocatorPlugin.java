@@ -23,7 +23,7 @@ public class GeolocatorPlugin implements FlutterPlugin, ActivityAware {
 
   private static final String TAG = "FlutterGeolocator";
   private final PermissionManager permissionManager;
-  private final GeolocationManager geolocationManager;
+  private GeolocationManager geolocationManager;
   private final LocationAccuracyManager locationAccuracyManager;
 
   @Nullable private GeolocatorLocationService foregroundLocationService;
@@ -63,7 +63,6 @@ public class GeolocatorPlugin implements FlutterPlugin, ActivityAware {
 
   public GeolocatorPlugin() {
     permissionManager = new PermissionManager();
-    geolocationManager = new GeolocationManager(logListener);
     locationAccuracyManager = new LocationAccuracyManager();
   }
 
@@ -108,6 +107,7 @@ public class GeolocatorPlugin implements FlutterPlugin, ActivityAware {
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
       logListener = new LogListener(flutterPluginBinding.getBinaryMessenger());
+      geolocationManager = new GeolocationManager(logListener);
 
     methodCallHandler =
         new MethodCallHandlerImpl(
