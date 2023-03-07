@@ -217,8 +217,6 @@ class LocationManagerClient implements LocationClient, LocationListener {
           } else {
               logListener.onLog(TAG, "No currentBestLocation.");
           }
-
-          logListener.onLog(TAG, "Checking again.");
       }),0,30, TimeUnit.SECONDS);
   }
 
