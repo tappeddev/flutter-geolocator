@@ -62,7 +62,8 @@ public class GeolocatorLocationService extends Service {
     public void onCreate() {
         super.onCreate();
         log("Creating service.");
-        geolocationManager = new GeolocationManager(logListener);
+
+        geolocationManager = new GeolocationManager(() -> logListener);
     }
 
     @Override

@@ -40,7 +40,7 @@ class StreamHandlerImpl implements EventChannel.StreamHandler {
     this.permissionManager = permissionManager;
     this.logListener = logListener;
 
-    geolocationManager = new GeolocationManager(logListener);
+    geolocationManager = new GeolocationManager(() -> logListener);
   }
 
   public void setForegroundLocationService(

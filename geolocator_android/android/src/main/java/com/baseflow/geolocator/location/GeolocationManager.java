@@ -16,17 +16,18 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+
 @SuppressWarnings("deprecation")
 public class GeolocationManager
     implements io.flutter.plugin.common.PluginRegistry.ActivityResultListener {
 
     static private final String TAG = "GeolocationManager";
 
-    private final LogListener logListener;
+    private final GetLogListener getLogListener;
   private final List<LocationClient> locationClients;
 
-  public GeolocationManager(LogListener logListener) {
-      this.logListener = logListener;
+  public GeolocationManager(GetLogListener getLogListener) {
+      this.getLogListener = getLogListener;
     this.locationClients = new CopyOnWriteArrayList<>();
   }
 
@@ -72,6 +73,7 @@ public class GeolocationManager
       boolean googlePlayServicesAvailable = isGooglePlayServicesAvailable(context);
 
       String message = "createLocationClient: forced: " + forceAndroidLocationManager + " googlePlayServicesAvailable: " + googlePlayServicesAvailable;
+      LogListener logListener = getLogListener.getListener();
       logListener.onLog(TAG, message);
 
     if (forceAndroidLocationManager) {
@@ -93,7 +95,10 @@ public class GeolocationManager
     // are unavailable. This might happen when the GMS package has been excluded by
     // the app developer due to its proprietary license.
     catch(NoClassDefFoundError e) {
-        logListener.onLog(TAG, "isGooglePlayServicesAvailable failed because of :" + e.getMessage());
+        LogListener logListener = getLogListener.getListener();
+        if(logListener != null) {
+            logListener.onLog(TAG, "isGooglePlayServicesAvailable failed because of :" + e.getMessage());
+        }
       return false;
     }
   }

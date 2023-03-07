@@ -107,7 +107,7 @@ public class GeolocatorPlugin implements FlutterPlugin, ActivityAware {
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
       logListener = new LogListener(flutterPluginBinding.getBinaryMessenger());
-      geolocationManager = new GeolocationManager(logListener);
+      geolocationManager = new GeolocationManager(() -> logListener);
 
     methodCallHandler =
         new MethodCallHandlerImpl(
