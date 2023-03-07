@@ -207,27 +207,25 @@ class FusedLocationClient implements LocationClient {
       @NonNull PositionChangedCallback positionChangedCallback,
       @NonNull ErrorCallback errorCallback) {
 
-      checker = Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
-              new Handler(Looper.getMainLooper()).post(() -> {
-                  logListener.onLog("FusedLocationClient", "Exception: Checking data...");
-                  fusedLocationProviderClient.getLocationAvailability().addOnSuccessListener((r) -> {
-                      logListener.onLog("FusedLocationClient", "availbility: " + r);
-                  });
-                  fusedLocationProviderClient.getLastLocation().addOnSuccessListener((r) -> {
-                      if(r == null) return;
+      checker = Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> new Handler(Looper.getMainLooper()).post(() -> {
+          logListener.onLog("FusedLocationClient", "Exception: Checking data...");
+          fusedLocationProviderClient.getLocationAvailability().addOnSuccessListener((r) -> {
+              logListener.onLog("FusedLocationClient", "availbility: " + r);
+          });
+          fusedLocationProviderClient.getLastLocation().addOnSuccessListener((r) -> {
+              if(r == null) return;
 
-                      String locationMessage = r.getLongitude() +
-                              " " +
-                              r.getLatitude() +
-                              " " +
-                              r.getAccuracy() +
-                              " " + r.getTime();
+              String locationMessage = r.getLongitude() +
+                      " " +
+                      r.getLatitude() +
+                      " " +
+                      r.getAccuracy() +
+                      " " + r.getTime();
 
 
-                      logListener.onLog("FusedLocationClient", "lastLocation: " +locationMessage);
-                  });
-              });
-      },0,30, TimeUnit.SECONDS);
+              logListener.onLog("FusedLocationClient", "lastLocation: " +locationMessage);
+          });
+      }),0,30, TimeUnit.SECONDS);
 
     this.positionChangedCallback = positionChangedCallback;
     this.errorCallback = errorCallback;

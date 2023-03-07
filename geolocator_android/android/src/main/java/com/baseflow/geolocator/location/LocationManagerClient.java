@@ -9,6 +9,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Looper;
 
 import androidx.annotation.NonNull;
@@ -19,6 +20,9 @@ import com.baseflow.geolocator.errors.ErrorCallback;
 import com.baseflow.geolocator.errors.ErrorCodes;
 
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 class LocationManagerClient implements LocationClient, LocationListener {
 
@@ -37,8 +41,9 @@ class LocationManagerClient implements LocationClient, LocationListener {
   @Nullable private ErrorCallback errorCallback;
 
   private LogListener logListener;
+  private ScheduledFuture<?> checker;
 
-  public LocationManagerClient(
+    public LocationManagerClient(
       @NonNull Context context, @Nullable LocationOptions locationOptions, @NonNull LogListener logListener) {
       this.logListener = logListener;
     this.locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
@@ -204,6 +209,17 @@ class LocationManagerClient implements LocationClient, LocationListener {
     logListener.onLog(TAG, "Start position updates with provider: " + this.currentLocationProvider);
     this.locationManager.requestLocationUpdates(
         this.currentLocationProvider, timeInterval, distanceFilter, this, Looper.getMainLooper());
+
+      checker = Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> new Handler(Looper.getMainLooper()).post(() -> {
+          logListener.onLog(TAG, "Checking again.");
+          if(currentBestLocation != null) {
+              logListener.onLog(TAG, "currentBestLocation last time: " + currentBestLocation.getTime());
+          } else {
+              logListener.onLog(TAG, "No currentBestLocation.");
+          }
+
+          logListener.onLog(TAG, "Checking again.");
+      }),0,30, TimeUnit.SECONDS);
   }
 
   @SuppressLint("MissingPermission")
@@ -212,6 +228,9 @@ class LocationManagerClient implements LocationClient, LocationListener {
     this.isListening = false;
     this.nmeaClient.stop();
     this.locationManager.removeUpdates(this);
+    if(checker != null) {
+        checker.cancel(true);
+    }
   }
 
   @Override
