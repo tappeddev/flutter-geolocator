@@ -214,6 +214,8 @@ class FusedLocationClient implements LocationClient {
                       logListener.onLog("FusedLocationClient", "availbility: " + r);
                   });
                   fusedLocationProviderClient.getLastLocation().addOnSuccessListener((r) -> {
+                      if(r == null) return;
+
                       String locationMessage = r.getLongitude() +
                               " " +
                               r.getLatitude() +
