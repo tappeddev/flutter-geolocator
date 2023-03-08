@@ -64,7 +64,8 @@ class LocationManagerClient implements LocationClient, LocationListener {
 
     if (isSignificantlyOlder) {
         logListener.onLog(TAG, "isBetterLocation: false -> isSignificantlyOlder (timeDelta: " + timeDelta + ")");
-        return false;
+        //return false;
+        return true;
     }
 
     float accuracyDelta = (int) (location.getAccuracy() - bestLocation.getAccuracy());
@@ -94,7 +95,8 @@ class LocationManagerClient implements LocationClient, LocationListener {
             + "isSignificantlyLessAccurate" + isSignificantlyLessAccurate + "\n";
 
       logListener.onLog(TAG, message);
-    return false;
+    //return false;
+    return true;
   }
 
   private static String getBestProvider(
