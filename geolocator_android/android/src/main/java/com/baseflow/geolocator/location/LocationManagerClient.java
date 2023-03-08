@@ -52,7 +52,7 @@ class LocationManagerClient implements LocationClient, LocationListener {
     this.nmeaClient = new NmeaClient(context, locationOptions);
   }
 
-  static boolean isBetterLocation(Location location, Location bestLocation) {
+  static boolean isBetterLocation(Location location, Location bestLocation, LogListener logListener) {
     if (bestLocation == null) return true;
 
     long timeDelta = location.getTime() - bestLocation.getTime();
@@ -62,7 +62,10 @@ class LocationManagerClient implements LocationClient, LocationListener {
 
     if (isSignificantlyNewer) return true;
 
-    if (isSignificantlyOlder) return false;
+    if (isSignificantlyOlder) {
+        logListener.onLog(TAG, "isBetterLocation: false -> isSignificantlyOlder (timeDelta: " + timeDelta + ")");
+        return false;
+    }
 
     float accuracyDelta = (int) (location.getAccuracy() - bestLocation.getAccuracy());
     boolean isLessAccurate = accuracyDelta > 0;
@@ -81,6 +84,16 @@ class LocationManagerClient implements LocationClient, LocationListener {
     //noinspection RedundantIfStatement
     if (isNewer && !isSignificantlyLessAccurate && isFromSameProvider) return true;
 
+    String message = "isBetterLocation: false\n"
+            + "timeDelta: " + timeDelta + "\n"
+            + "isSignificantlyNewer: " + isSignificantlyNewer + "\n"
+            + "isSignificantlyOlder: " + isSignificantlyOlder + "\n"
+            + "isNewer: " + isNewer + "\n"
+            + "isLessAccurate" + isLessAccurate + "\n"
+            + "isMoreAccurate" + isMoreAccurate + "\n"
+            + "isSignificantlyLessAccurate" + isSignificantlyLessAccurate + "\n";
+
+      logListener.onLog(TAG, message);
     return false;
   }
 
@@ -159,7 +172,7 @@ class LocationManagerClient implements LocationClient, LocationListener {
       @SuppressLint("MissingPermission")
       Location location = locationManager.getLastKnownLocation(provider);
 
-      if (location != null && isBetterLocation(location, bestLocation)) {
+      if (location != null && isBetterLocation(location, bestLocation, logListener)) {
         bestLocation = location;
       }
     }
@@ -237,7 +250,7 @@ class LocationManagerClient implements LocationClient, LocationListener {
     float desiredAccuracy =
         locationOptions != null ? accuracyToFloat(locationOptions.getAccuracy()) : 50;
 
-    if (isBetterLocation(location, currentBestLocation)
+    if (isBetterLocation(location, currentBestLocation, logListener)
         && location.getAccuracy() <= desiredAccuracy) {
       this.currentBestLocation = location;
 
@@ -247,7 +260,7 @@ class LocationManagerClient implements LocationClient, LocationListener {
           logListener.onLog(TAG, "position delivered.");
       }
     } else {
-        logListener.onLog(TAG, "position not better or not accurate enough.");
+        logListener.onLog(TAG, "position not better or not accurate enough. Accuracy: " + location.getAccuracy() + " provider: " + location.getProvider());
     }
   }
 
